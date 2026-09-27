@@ -1,8 +1,8 @@
-version: '3.1'
+name: dedp_ch02_cdc_delta_lake_cdf_dataset
 services:
   data_generator:
     image: waitingforcode/data-generator-blogging-platform:0.3-beta
-    container_name: dedp_test_full_loader_exposition
+    container_name: dedp_test_cdc_delta_lake_cdf_data_generator
     volumes:
       -  /tmp/dedp/ch02/incremental-load/change-data-capture/:/home/data_generator_user/data_generator_output
       - ./generation_configuration.yaml:/home/data_generator_user/generation_configuration.yaml
