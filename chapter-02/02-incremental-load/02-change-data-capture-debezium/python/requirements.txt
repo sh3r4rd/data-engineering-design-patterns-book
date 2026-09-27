@@ -1,1 +1,3 @@
+# Not required to run this demo: the stream processor runs in Docker (see docker/stream-processor/Dockerfile).
+# Install these into a local virtualenv only if you want IDE autocompletion for the job code.
 pyspark==3.5.0

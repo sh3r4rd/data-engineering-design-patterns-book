@@ -1,0 +1,14 @@
+name: dedp_ch02_cdc_debezium_stream_processor
+services:
+  visits_stream_processor:
+    build: .
+    container_name: dedp_test_cdc_debezium_stream_processor
+    init: true
+    volumes:
+      - ../../visits_stream_processor.py:/app/visits_stream_processor.py:ro
+    # python, not spark-submit: the Kafka package is set in the SparkSession builder, which spark-submit would ignore
+    command: ["python", "visits_stream_processor.py"]
+networks:
+  default:
+    name: dedp_ch02_cdc_debezium
+    external: true
