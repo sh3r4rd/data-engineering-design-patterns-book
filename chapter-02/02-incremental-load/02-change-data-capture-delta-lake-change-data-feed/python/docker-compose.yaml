@@ -1,0 +1,16 @@
+name: dedp_ch02_cdc_delta_lake_cdf_reader
+services:
+  events_table_streaming_reader:
+    build: .
+    container_name: dedp_test_cdc_delta_lake_cdf_reader
+    init: true
+    volumes:
+      - .:/app/src:ro
+      - /tmp/dedp/ch02/incremental-load/change-data-capture:/tmp/dedp/ch02/incremental-load/change-data-capture:ro
+    command:
+      - bash
+      - -c
+      - |
+        # the Delta table lives in a container-local spark-warehouse; a leftover one makes saveAsTable fail on restart
+        rm -rf spark-warehouse metastore_db
+        exec python src/events_table_streaming_reader.py

@@ -1,3 +1,8 @@
+# Change Data Capture - Delta Lake Change Data Feed
+
+All the components (dataset generator, Apache Spark job) run in Docker containers; you don't need a local Python
+environment or JDK. The commands below start from this `python` directory.
+
 1. Create the dataset:
 ```
 cd ../dataset
@@ -10,8 +15,11 @@ docker-compose down --volumes; docker-compose up
      and interacts with a higher level `Lock` 
   * the next part of the code waits for the first dataset to be generated and just after starts 
     processing the partitions in a streaming way
-    * 
-3. Run the `events_table_streaming_reader.py`
+3. Run the `events_table_streaming_reader.py` in a new terminal opened in this `python` directory:
+```
+docker-compose down --volumes; docker-compose up --build
+```
+The first run builds the image (it downloads PySpark and the Delta Lake jars) and can take a few minutes.
 * you should see the generated visits streamed from the tables concurrently to the loading process, e.g.
 ```
 
@@ -27,4 +35,11 @@ Batch: 3
 | 139627729791872_2|2023-11-01 01:08:00|139627729791872_e...|      about|      insert|              4|2023-12-25 13:41:...|
 | 139627729791872_3|2023-11-01 01:17:00|139627729791872_5...| categories|      insert|              4|2023-12-25 13:41:...|
 ...
+```
+
+## Cleanup
+Run from this `python` directory:
+```
+docker-compose down --volumes
+(cd ../dataset && docker-compose down --volumes)
 ```
