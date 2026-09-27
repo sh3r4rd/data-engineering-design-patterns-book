@@ -15,7 +15,7 @@ input_data_schema = StructType([
 ])
 
 input_data_stream = spark.readStream \
-    .option('kafka.bootstrap.servers', 'localhost:9094') \
+    .option('kafka.bootstrap.servers', 'kafka:9092') \
     .option('subscribe', 'dedp.dedp_schema.visits') \
     .option('startingOffsets', 'EARLIEST') \
     .format('kafka').load()

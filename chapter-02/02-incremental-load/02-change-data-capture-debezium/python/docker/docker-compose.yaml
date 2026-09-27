@@ -1,4 +1,4 @@
-version: '3.1'
+name: dedp_ch02_cdc_debezium
 services:
   kafka:
     image: 'bitnamilegacy/kafka:3.5'
@@ -58,3 +58,6 @@ services:
      - CONFIG_STORAGE_TOPIC=my_connect_configs
      - OFFSET_STORAGE_TOPIC=my_connect_offsets
      - STATUS_STORAGE_TOPIC=my_connect_statuses
+networks:
+  default:
+    name: dedp_ch02_cdc_debezium
