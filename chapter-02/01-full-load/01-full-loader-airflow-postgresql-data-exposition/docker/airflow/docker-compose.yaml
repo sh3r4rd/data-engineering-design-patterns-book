@@ -1,0 +1,23 @@
+services:
+  airflow:
+    build: .
+    container_name: dedp_test_full_loader_airflow
+    ports:
+      - 8080:8080
+    volumes:
+      - ../../dags:/opt/airflow/dags
+      - ../../sql:/opt/airflow/sql
+      - /tmp/dedp/ch02/full-loader/data-exposition:/tmp/dedp/ch02/full-loader/data-exposition
+    command:
+      - bash
+      - -c
+      - |
+        airflow db migrate || exit 1
+        airflow connections add --conn-type fs --conn-extra '{"path": "/"}' fs_default
+        airflow users create --username dedp --password dedp --role Admin --email empty --firstname admin --lastname admin
+        airflow connections add --conn-type postgres --conn-host dedp_test_full_loader_postgresql --conn-port 5432 --conn-login dedp_test --conn-password dedp_test docker_postgresql
+        airflow webserver & exec airflow scheduler
+networks:
+  default:
+    name: dedp_ch02_full_loader_data_exposition
+    external: true

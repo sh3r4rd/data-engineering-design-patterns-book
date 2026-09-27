@@ -1,3 +1,4 @@
+# Not required to run this demo: Airflow runs in Docker (see docker/airflow/Dockerfile).
+# Install these into a local virtualenv only if you want IDE autocompletion for the DAG code.
 apache-airflow==2.9.0
 apache-airflow-providers-postgres==5.12.0
-pendulum==2.1.2

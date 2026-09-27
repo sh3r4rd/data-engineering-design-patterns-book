@@ -1,5 +1,10 @@
 # Full loader - intermediary data exposition
 
+All the components (dataset generator, PostgreSQL, Apache Airflow) run in Docker containers; you don't need a local
+Python environment. Apache Airflow reaches PostgreSQL through a shared Docker network
+(`dedp_ch02_full_loader_data_exposition`) created by the PostgreSQL stack, using the `dedp_test_full_loader_postgresql`
+container name as the host.
+
 1. Generate the dataset:
 ```
 cd docker/dataset
@@ -7,16 +12,19 @@ mkdir -p /tmp/dedp/ch02/full-loader/data-exposition/input
 docker-compose down --volumes; docker-compose up
 ```
 2. Start a PostgreSQL instance:
+**⚠️ If you replay the demo, stop Airflow first (see the Cleanup section); it's attached to the network managed by this stack**
 ```
 cd ../postgresql
 docker-compose down --volumes; docker-compose up
 ```
-3. Start Apache Airflow instance:
-**⚠️ Enable the Virtual Environment before**
+3. Start Apache Airflow instance in a new terminal opened in this demo's directory:
+**⚠️ PostgreSQL from the previous step must be running; it creates the Docker network used by Airflow**
 ```
-./start.sh
+cd docker/airflow
+docker-compose down --volumes; docker-compose up --build
 ```
-4. Access the Web UI at http://localhost:8080/login/ with dedp/dedp as login/password
+The first run builds the image and can take a few minutes.
+4. Access the Web UI at http://localhost:8080/login/ with dedp/dedp as login/password once the webserver has started
 5. Go to the `devices_loader` DAG at http://localhost:8080/dags/devices_loader/grid?tab=graph
 * the pipeline loads devices file to our PostgreSQL instance
 * ⚠️ the DAG focuses on the data ingestion part and doesn't include any data quality-related steps;
@@ -48,9 +56,9 @@ dedp_test=# SELECT * FROM devices;
 ------+-----------+---------
 (0 rows)
 ```
-11. Restore the previous version by restarting the `load_data_to_the_final_table` task from the previous DAG instance:
+12. Restore the previous version by restarting the `load_data_to_the_final_table` task from the previous DAG instance:
 ![restart_clear.png](assets%2Frestart_clear.png)
-12. Check again the view; you should see now the devices from the previous instance's load:
+13. Check again the view; you should see now the devices from the previous instance's load:
 ```
 $ docker exec -ti dedp_test_full_loader_postgresql psql --user dedp_test -d dedp_test 
 psql (11.9 (Debian 11.9-1.pgdg90+1))
@@ -71,4 +79,12 @@ dedp_test=# SELECT * FROM devices;
  lenovo | Yoga 7i (14" Intel) 2 in 1 Laptop                | Ubuntu 22
  lenovo | Legion Slim 5 Gen 8 (16" AMD) Gaming Laptop      | Ubuntu 23
 (50 rows)
+```
+
+## Cleanup
+Run from this demo's directory and stop the stacks in the reverse order (Airflow is attached to the PostgreSQL network, so it must go first):
+```
+(cd docker/airflow && docker-compose down --volumes)
+(cd docker/postgresql && docker-compose down --volumes)
+(cd docker/dataset && docker-compose down --volumes)
 ```
