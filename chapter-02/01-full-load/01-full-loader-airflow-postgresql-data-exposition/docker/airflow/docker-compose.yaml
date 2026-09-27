@@ -12,8 +12,8 @@ services:
       - bash
       - -c
       - |
-        airflow db migrate
-        airflow connections create-default-connections
+        airflow db migrate || exit 1
+        airflow connections add --conn-type fs --conn-extra '{"path": "/"}' fs_default
         airflow users create --username dedp --password dedp --role Admin --email empty --firstname admin --lastname admin
         airflow connections add --conn-type postgres --conn-host dedp_test_full_loader_postgresql --conn-port 5432 --conn-login dedp_test --conn-password dedp_test docker_postgresql
         airflow webserver & exec airflow scheduler

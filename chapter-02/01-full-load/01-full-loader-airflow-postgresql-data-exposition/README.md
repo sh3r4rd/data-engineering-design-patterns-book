@@ -12,11 +12,12 @@ mkdir -p /tmp/dedp/ch02/full-loader/data-exposition/input
 docker-compose down --volumes; docker-compose up
 ```
 2. Start a PostgreSQL instance:
+**⚠️ If you replay the demo, stop Airflow first (see the Cleanup section); it's attached to the network managed by this stack**
 ```
 cd ../postgresql
 docker-compose down --volumes; docker-compose up
 ```
-3. Start Apache Airflow instance in a new terminal:
+3. Start Apache Airflow instance in a new terminal opened in this demo's directory:
 **⚠️ PostgreSQL from the previous step must be running; it creates the Docker network used by Airflow**
 ```
 cd docker/airflow
@@ -81,9 +82,9 @@ dedp_test=# SELECT * FROM devices;
 ```
 
 ## Cleanup
-Stop the stacks in the reverse order (Airflow is attached to the PostgreSQL network, so it must go first):
+Run from this demo's directory and stop the stacks in the reverse order (Airflow is attached to the PostgreSQL network, so it must go first):
 ```
-cd docker/airflow && docker-compose down --volumes
-cd ../postgresql && docker-compose down --volumes
-cd ../dataset && docker-compose down --volumes
+(cd docker/airflow && docker-compose down --volumes)
+(cd docker/postgresql && docker-compose down --volumes)
+(cd docker/dataset && docker-compose down --volumes)
 ```
