@@ -1,4 +1,3 @@
-version: '3.1'
 services:
   postgresql:
     image: postgres:11
@@ -12,3 +11,6 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - /tmp/dedp/ch02/full-loader/data-exposition/input:/data_to_load
+networks:
+  default:
+    name: dedp_ch02_full_loader_data_exposition

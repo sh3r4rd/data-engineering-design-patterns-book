@@ -15,7 +15,7 @@ with DAG('devices_loader', max_active_runs=1,
              'retries': 3,
              'retry_delay': timedelta(minutes=1)
          },
-         template_searchpath=[os.getcwd()],
+         template_searchpath=[os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')],
          user_defined_macros={'get_table_name': get_table_name,
                               'get_input_csv_to_load': get_input_csv_to_load_for_host},
          schedule_interval="@daily") as dag:
