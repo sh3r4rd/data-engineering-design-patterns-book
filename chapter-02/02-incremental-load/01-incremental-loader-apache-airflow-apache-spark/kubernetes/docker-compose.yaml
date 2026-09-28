@@ -22,15 +22,22 @@ services:
     depends_on:
       - k3s
     volumes:
-      - kubeconfig:/kubeconfig:ro
+      - kubeconfig:/kubeconfig
     entrypoint:
       - sh
       - -c
       - |
         export KUBECONFIG=/tmp/kubeconfig.yaml
         # re-read the kubeconfig on each attempt: k3s (re)writes it once the API server is ready
+        attempts=0
         until sed 's#https://127.0.0.1:6443#https://k3s:6443#' /kubeconfig/kubeconfig.yaml > $$KUBECONFIG 2> /dev/null \
-          && helm list --all-namespaces > /dev/null 2>&1; do sleep 2; done
+          && helm list --all-namespaces > /dev/null 2>&1; do
+          attempts=$$((attempts + 1))
+          if [ $$attempts -ge 150 ]; then echo "The Kubernetes API server isn't ready after 5 minutes"; exit 1; fi
+          sleep 2
+        done
+        # kubeconfig for the containers of the shared network (Apache Airflow), pointing at https://k3s:6443
+        cp $$KUBECONFIG /kubeconfig/kubeconfig-docker.yaml.tmp && mv /kubeconfig/kubeconfig-docker.yaml.tmp /kubeconfig/kubeconfig-docker.yaml || exit 1
         helm repo add spark-operator https://kubeflow.github.io/spark-operator || exit 1
         helm upgrade --install dedp-spark-operator spark-operator/spark-operator --version 2.5.2 \
           --namespace dedp-ch02 --create-namespace \

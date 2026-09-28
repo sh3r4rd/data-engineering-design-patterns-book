@@ -7,15 +7,17 @@ you don't need a local Python environment, minikube, Helm, or kubectl.
 1. Generate the dataset for the demo:
 ```
 cd dataset
-mkdir -p /tmp/dedp/ch02/incremental_loader/
+mkdir -p /tmp/dedp/ch02/incremental_loader/output
+# the Spark jobs run as the spark user (uid 185) of the job image and write their output here
+chmod 777 /tmp/dedp/ch02/incremental_loader/output
 docker-compose down --volumes; docker-compose up
 ```
 
 ## Kubernetes and PySpark job preparation
-1. Start the Kubernetes cluster, in a new terminal opened in this demo's directory:
-**⚠️ If you replay the demo, stop Apache Airflow first (see the Cleanup section); it's attached to the network and volume managed by this stack, and it must be restarted to get the credentials of the recreated cluster**
+1. Start the Kubernetes cluster:
+**⚠️ If you replay the demo, stop Apache Airflow first (see the Cleanup section); it's attached to the network and volume managed by this stack**
 ```
-cd kubernetes
+cd ../kubernetes
 docker-compose down --volumes; docker-compose up -d
 docker wait dedp_test_incremental_loader_spark_operator_installer
 ```
