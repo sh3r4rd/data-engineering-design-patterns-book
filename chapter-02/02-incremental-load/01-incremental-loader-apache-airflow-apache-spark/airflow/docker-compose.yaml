@@ -1,0 +1,31 @@
+name: dedp_ch02_incremental_loader_airflow
+services:
+  airflow:
+    build: .
+    container_name: dedp_test_incremental_loader_airflow
+    ports:
+      - 8080:8080
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /tmp/dedp/ch02/incremental_loader:/tmp/dedp/ch02/incremental_loader
+      - kubeconfig:/kubeconfig:ro
+    command:
+      - bash
+      - -c
+      - |
+        # written by the Spark Operator installer of the Kubernetes stack; it points at https://k3s:6443 on the shared network
+        # and is read by each task, so a recreated cluster doesn't require restarting Airflow
+        if [ ! -f /kubeconfig/kubeconfig-docker.yaml ]; then echo "Start the Kubernetes stack first"; exit 1; fi
+        airflow db migrate || exit 1
+        airflow connections add --conn-type fs --conn-extra '{"path": "/"}' fs_default
+        airflow connections add --conn-type kubernetes --conn-extra '{"kube_config_path": "/kubeconfig/kubeconfig-docker.yaml"}' kubernetes_default
+        airflow users create --username dedp --password dedp --role Admin --email empty --firstname admin --lastname admin
+        airflow webserver & exec airflow scheduler
+volumes:
+  kubeconfig:
+    name: dedp_ch02_incremental_loader_kubeconfig
+    external: true
+networks:
+  default:
+    name: dedp_ch02_incremental_loader
+    external: true

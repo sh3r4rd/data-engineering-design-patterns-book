@@ -1,2 +1,4 @@
-apache-airflow==2.7.3
-apache-airflow-providers-cncf-kubernetes==7.3.0
+# Not required to run this demo: Airflow runs in Docker (see Dockerfile).
+# Install these into a local virtualenv only if you want IDE autocompletion for the DAG code.
+apache-airflow==2.9.0
+apache-airflow-providers-cncf-kubernetes==7.13.0
