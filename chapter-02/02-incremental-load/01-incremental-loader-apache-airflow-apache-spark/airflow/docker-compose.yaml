@@ -1,0 +1,31 @@
+name: dedp_ch02_incremental_loader_airflow
+services:
+  airflow:
+    build: .
+    container_name: dedp_test_incremental_loader_airflow
+    ports:
+      - 8080:8080
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /tmp/dedp/ch02/incremental_loader:/tmp/dedp/ch02/incremental_loader
+      - kubeconfig:/kubeconfig:ro
+    command:
+      - bash
+      - -c
+      - |
+        # the k3s kubeconfig targets 127.0.0.1; Airflow reaches the API server by its service name on the shared network
+        mkdir -p /home/airflow/.kube
+        sed 's#https://127.0.0.1:6443#https://k3s:6443#' /kubeconfig/kubeconfig.yaml > /home/airflow/.kube/config || exit 1
+        airflow db migrate || exit 1
+        airflow connections add --conn-type fs --conn-extra '{"path": "/"}' fs_default
+        airflow connections add --conn-type kubernetes --conn-extra '{"kube_config_path": "/home/airflow/.kube/config"}' kubernetes_default
+        airflow users create --username dedp --password dedp --role Admin --email empty --firstname admin --lastname admin
+        airflow webserver & exec airflow scheduler
+volumes:
+  kubeconfig:
+    name: dedp_ch02_incremental_loader_kubeconfig
+    external: true
+networks:
+  default:
+    name: dedp_ch02_incremental_loader
+    external: true

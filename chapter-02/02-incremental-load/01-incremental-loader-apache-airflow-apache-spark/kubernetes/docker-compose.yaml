@@ -1,0 +1,46 @@
+name: dedp_ch02_incremental_loader_kubernetes
+services:
+  k3s:
+    image: rancher/k3s:v1.30.14-k3s2
+    container_name: dedp_test_incremental_loader_k3s
+    # k3s runs a full Kubernetes node (containerd, cgroups, iptables) inside the container
+    privileged: true
+    command: server --disable=traefik --disable=metrics-server --tls-san=k3s
+    tmpfs:
+      - /run
+      - /var/run
+    environment:
+      - K3S_KUBECONFIG_OUTPUT=/kubeconfig/kubeconfig.yaml
+      - K3S_KUBECONFIG_MODE=644
+    volumes:
+      # replaces `minikube mount`; the SparkApplication's hostPath volume resolves on this node
+      - /tmp/dedp/ch02/incremental_loader:/data_for_demo
+      - kubeconfig:/kubeconfig
+  spark_operator_installer:
+    image: alpine/helm:3.16.4
+    container_name: dedp_test_incremental_loader_spark_operator_installer
+    depends_on:
+      - k3s
+    volumes:
+      - kubeconfig:/kubeconfig:ro
+    entrypoint:
+      - sh
+      - -c
+      - |
+        export KUBECONFIG=/tmp/kubeconfig.yaml
+        # re-read the kubeconfig on each attempt: k3s (re)writes it once the API server is ready
+        until sed 's#https://127.0.0.1:6443#https://k3s:6443#' /kubeconfig/kubeconfig.yaml > $$KUBECONFIG 2> /dev/null \
+          && helm list --all-namespaces > /dev/null 2>&1; do sleep 2; done
+        helm repo add spark-operator https://kubeflow.github.io/spark-operator || exit 1
+        helm upgrade --install dedp-spark-operator spark-operator/spark-operator --version 2.5.2 \
+          --namespace dedp-ch02 --create-namespace \
+          --set "spark.jobNamespaces={dedp-ch02}" \
+          --set spark.serviceAccount.name=spark-editor \
+          --wait --timeout 10m || exit 1
+        echo "Spark Operator installed"
+volumes:
+  kubeconfig:
+    name: dedp_ch02_incremental_loader_kubeconfig
+networks:
+  default:
+    name: dedp_ch02_incremental_loader

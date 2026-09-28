@@ -18,7 +18,7 @@ with DAG('visits_incremental_loader', max_active_runs=1,
              'retries': 3,
              'retry_delay': timedelta(minutes=1)
          },
-         template_searchpath=[os.getcwd()],
+         template_searchpath=[os.path.dirname(os.path.abspath(__file__))],
          schedule_interval="@daily") as dag:
 
     next_partition_template = get_data_location_base_dir() + '/date={{ data_interval_end | ds }}'
