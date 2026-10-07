@@ -6,11 +6,17 @@ services:
     init: true
     volumes:
       - .:/app/src:ro
-      - /tmp/dedp/ch02/incremental-load/change-data-capture:/tmp/dedp/ch02/incremental-load/change-data-capture:ro
+      # create_host_path: false fails fast instead of creating a root-owned dataset directory on the host
+      - type: bind
+        source: /tmp/dedp/ch02/incremental-load/change-data-capture
+        target: /tmp/dedp/ch02/incremental-load/change-data-capture
+        read_only: true
+        bind:
+          create_host_path: false
     command:
       - bash
       - -c
       - |
-        # the Delta table lives in a container-local spark-warehouse; a leftover one makes saveAsTable fail on restart
-        rm -rf spark-warehouse metastore_db
+        test -d /tmp/dedp/ch02/incremental-load/change-data-capture/input/date=2023-11-07 \
+          || { echo 'Dataset not found; create it first with the ../dataset docker-compose'; exit 1; }
         exec python src/events_table_streaming_reader.py

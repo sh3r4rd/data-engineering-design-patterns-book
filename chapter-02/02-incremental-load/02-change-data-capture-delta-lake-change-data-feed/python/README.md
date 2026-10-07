@@ -11,11 +11,11 @@ docker-compose down --volumes; docker-compose up
 ```
 2. Open [events_table_streaming_reader.py](events_table_streaming_reader.py)
 * the code is divided into 2 parts:
-  * `load_data_to_the_events_table` - it's the data generator; it generates partitioned dataset 
-     and interacts with a higher level `Lock` 
-  * the next part of the code waits for the first dataset to be generated and just after starts 
-    processing the partitions in a streaming way
-3. Run the `events_table_streaming_reader.py` in a new terminal opened in this `python` directory:
+  * `load_data_to_the_events_table` - it loads the generated partitions one by one into the `events` Delta table
+     and signals the creation of the table with a higher level `Event`
+  * the next part of the code waits for the `events` table to be created and just after starts
+    processing the table's Change Data Feed in a streaming way; it fails if the loader stops before creating the table
+3. Once the dataset generator from step 1 exits, run the `events_table_streaming_reader.py` from this `python` directory:
 ```
 docker-compose down --volumes; docker-compose up --build
 ```

@@ -1,4 +1,4 @@
-# Not required to run this demo: the job runs in Docker (see Dockerfile).
-# Install these into a local virtualenv only if you want IDE autocompletion for the job code.
+# Installed into the Docker image (see Dockerfile); you don't need them locally to run this demo.
+# Install them into a local virtualenv only if you want IDE autocompletion for the job code.
 delta-spark==3.0.0
 pyspark==3.5.0
