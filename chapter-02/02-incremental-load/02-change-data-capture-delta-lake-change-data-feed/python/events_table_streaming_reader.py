@@ -1,4 +1,4 @@
-from threading import Thread, Lock
+from threading import Thread, Event
 
 from delta import configure_spark_with_delta_pip
 from pyspark.sql import SparkSession
@@ -13,10 +13,10 @@ if __name__ == "__main__":
                                                             "org.apache.spark.sql.delta.catalog.DeltaCatalog")
                                                     ).getOrCreate())
 
-    lock = Lock()
+    events_table_created = Event()
 
 
-    def load_data_to_the_events_table(lock_to_release: Lock):
+    def load_data_to_the_events_table(table_created: Event):
         partitions = ['date=2023-11-01', 'date=2023-11-02', 'date=2023-11-03',
                       'date=2023-11-04', 'date=2023-11-05', 'date=2023-11-06', 'date=2023-11-07']
         base_dir = '/tmp/dedp/ch02/incremental-load/change-data-capture/input/'
@@ -26,20 +26,20 @@ if __name__ == "__main__":
             input_dataset = (
                 spark_session.read.schema('visit_id STRING, event_time TIMESTAMP, user_id STRING, page STRING')
                 .format('json').load(path_to_load))
-            if lock_to_release.locked():
-                (input_dataset.write.format('delta').saveAsTable('events', overwrite=True))
-                print('Releasing lock')
-                lock_to_release.release()
+            if not table_created.is_set():
+                (input_dataset.write.format('delta').mode('overwrite').saveAsTable('events'))
+                print('Events table created')
+                table_created.set()
             else:
                 (input_dataset.write.format('delta').insertInto('events'))
 
 
-    thread = Thread(target=load_data_to_the_events_table, kwargs={'lock_to_release': lock})
+    thread = Thread(target=load_data_to_the_events_table, kwargs={'table_created': events_table_created})
     thread.start()
 
-    lock.acquire(blocking=True)
-    while lock.locked():
-        pass
+    while not events_table_created.wait(timeout=1):
+        if not thread.is_alive():
+            raise RuntimeError('The loader thread failed before creating the events table')
 
     events = (spark_session.readStream.format('delta')
               .option('maxFilesPerTrigger', 4)
