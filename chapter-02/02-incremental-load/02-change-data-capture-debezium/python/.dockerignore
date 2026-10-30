@@ -1,0 +1,3 @@
+# The stream processor image only needs requirements.txt from this directory
+*
+!requirements.txt

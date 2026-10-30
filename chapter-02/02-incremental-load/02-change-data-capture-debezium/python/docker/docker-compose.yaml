@@ -1,4 +1,3 @@
-name: dedp_ch02_cdc_debezium
 services:
   kafka:
     image: 'bitnamilegacy/kafka:3.5'
@@ -58,6 +57,19 @@ services:
      - CONFIG_STORAGE_TOPIC=my_connect_configs
      - OFFSET_STORAGE_TOPIC=my_connect_offsets
      - STATUS_STORAGE_TOPIC=my_connect_statuses
-networks:
-  default:
-    name: dedp_ch02_cdc_debezium
+  visits_stream_processor:
+    # not started by a plain `docker-compose up`; run it explicitly (see the README's step 4)
+    profiles: ['stream-processor']
+    depends_on:
+      - kafka
+    build:
+      context: ..
+      dockerfile: docker/stream-processor/Dockerfile
+    container_name: dedp_test_cdc_debezium_stream_processor
+    init: true
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    volumes:
+      - ../visits_stream_processor.py:/app/visits_stream_processor.py:ro
+    # python, not spark-submit: the Kafka package is set in the SparkSession builder, which spark-submit would ignore
+    command: ['python', 'visits_stream_processor.py']
