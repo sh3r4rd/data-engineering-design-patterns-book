@@ -1,1 +1,3 @@
+# Installed in the stream processor image (docker/stream-processor/Dockerfile); install it into a local virtualenv too
+# if you want IDE autocompletion or to run the job from the host.
 pyspark==3.5.0

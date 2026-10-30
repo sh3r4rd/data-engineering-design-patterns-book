@@ -1,8 +1,11 @@
+import os
+
+import pyspark
 from pyspark.sql import SparkSession, functions as F
 from pyspark.sql.types import StructType, StructField, StringType, LongType
 
 spark = SparkSession.builder.master('local[*]') \
-    .config('spark.jars.packages', 'org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0') \
+    .config('spark.jars.packages', f'org.apache.spark:spark-sql-kafka-0-10_2.12:{pyspark.__version__}') \
     .getOrCreate()
 
 input_data_schema = StructType([
@@ -15,7 +18,7 @@ input_data_schema = StructType([
 ])
 
 input_data_stream = spark.readStream \
-    .option('kafka.bootstrap.servers', 'localhost:9094') \
+    .option('kafka.bootstrap.servers', os.environ.get('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9094')) \
     .option('subscribe', 'dedp.dedp_schema.visits') \
     .option('startingOffsets', 'EARLIEST') \
     .format('kafka').load()
